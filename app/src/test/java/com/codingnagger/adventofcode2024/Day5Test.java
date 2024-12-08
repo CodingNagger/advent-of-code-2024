@@ -24,6 +24,6 @@ class Day5Test {
     void partTwo() {
         String result = DAY.partTwo(INPUT);
 
-        assertThat(result).isEqualTo("");
+        assertThat(result).isEqualTo("123");
     }
 }
