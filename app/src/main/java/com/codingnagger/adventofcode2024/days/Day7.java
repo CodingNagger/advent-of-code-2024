@@ -15,16 +15,24 @@ public class Day7 implements Day {
 
     @Override
     public String partTwo(List<String> input) {
-        return "";
+        return input.stream().map(Equation::parse)
+                .map(Equation::partTwo)
+                .filter(Equation::isSolvable)
+                .mapToLong(Equation::test)
+                .sum() + "";
     }
 
-    record Equation(long test, List<Long> components) {
+    record Equation(long test, List<Long> components, boolean isPartTwo) {
         public static Equation parse(String line) {
             String[] parts = line.split(": ");
             var test = Long.parseLong(parts[0]);
             var components = Arrays.stream(parts[1].split(" ")).map(Long::parseLong).toList();
 
-            return new Equation(test, components);
+            return new Equation(test, components, false);
+        }
+
+        public Equation partTwo() {
+            return new Equation(test, components, true);
         }
 
         public boolean isSolvable() {
@@ -51,6 +59,11 @@ public class Day7 implements Day {
 
                 queue.add(new SpitEquationComponents(current.accumulated + nextComponent, nextRemainder));
                 queue.add(new SpitEquationComponents(current.accumulated * nextComponent, nextRemainder));
+
+                if (isPartTwo()) {
+                    var accumulated = Long.parseLong("" + current.accumulated + nextComponent);
+                    queue.add(new SpitEquationComponents(accumulated, nextRemainder));
+                }
             }
 
             return false;

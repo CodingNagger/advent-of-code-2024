@@ -6,7 +6,6 @@ import com.codingnagger.adventofcode2024.utils.InputLoader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 
@@ -35,14 +34,6 @@ public class Day7Test {
     void partTwo() {
         String result = DAY.partTwo(INPUT);
 
-        assertThat(result).isEqualTo("");
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"day8_simplest"})
-    void partTwo_smallTests(String filename) {
-        String result = DAY.partTwo(InputLoader.LoadTest(filename + ".txt"));
-
-        assertThat(result).isEqualTo("");
+        assertThat(result).isEqualTo("11387");
     }
 }
