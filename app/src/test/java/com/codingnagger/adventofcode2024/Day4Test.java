@@ -5,6 +5,7 @@ import com.codingnagger.adventofcode2024.days.Day4;
 import com.codingnagger.adventofcode2024.utils.InputLoader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
@@ -23,7 +24,7 @@ class Day4Test {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"day4_simplestXmas"})
+    @ValueSource(strings = {"day4_simplestXmas", "day4_simplestReverseXmas"})
     void partOne_smallTests(String filename) {
         String result = DAY.partOne(InputLoader.LoadTest(filename + ".txt"));
 
@@ -34,6 +35,14 @@ class Day4Test {
     void partTwo() {
         String result = DAY.partTwo(INPUT);
 
-        assertThat(result).isEqualTo("30");
+        assertThat(result).isEqualTo("9");
+    }
+
+    @ParameterizedTest
+    @CsvSource({"day4_part2_smallestXmas,1", "day4_part2_tangledXmas,2", "day4_part2_notXmas,0"})
+    void partTwo_smallTests(String filename, String expected) {
+        String result = DAY.partTwo(InputLoader.LoadTest(filename + ".txt"));
+
+        assertThat(result).isEqualTo(expected);
     }
 }
