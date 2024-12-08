@@ -34,6 +34,14 @@ class Day8Test {
     void partTwo() {
         String result = DAY.partTwo(INPUT);
 
-        assertThat(result).isEqualTo(null);
+        assertThat(result).isEqualTo("34");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"day8_simplest"})
+    void partTwo_smallTests(String filename) {
+        String result = DAY.partTwo(InputLoader.LoadTest(filename + ".txt"));
+
+        assertThat(result).isEqualTo("4");
     }
 }
