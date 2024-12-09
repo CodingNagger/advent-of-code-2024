@@ -34,6 +34,14 @@ class Day9Test {
     void partTwo() {
         String result = DAY.partTwo(INPUT);
 
-        assertThat(result).isEqualTo("");
+        assertThat(result).isEqualTo("2858");
+    }
+
+    @ParameterizedTest
+    @CsvSource({"day9_simplest,6", "day9_simplestExample,60", "day9_partTwoSimplest,31"})
+    void partTwo_smallTests(String filename, String expected) {
+        String result = DAY.partOne(InputLoader.LoadTest(filename + ".txt"));
+
+        assertThat(result).isEqualTo(expected);
     }
 }
