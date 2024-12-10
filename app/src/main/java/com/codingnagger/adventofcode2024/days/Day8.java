@@ -117,7 +117,7 @@ public class Day8 implements Day {
         return antinodes.stream().map(a -> new Location(a.x, a.y)).distinct().count() + "";
     }
 
-    record Antenna(char frequency, int x, int y) {
+    private record Antenna(char frequency, int x, int y) {
         public Antinode antinode(Antenna other) {
             if (other.frequency != frequency) {
                 throw new IllegalArgumentException("Wrong frequency " + other.frequency + ", expected " + frequency);
@@ -133,12 +133,12 @@ public class Day8 implements Day {
         }
     }
 
-    record Antinode(char frequency, int x, int y) {
+    private record Antinode(char frequency, int x, int y) {
     }
 
-    record Location(int x, int y) {
+    private record Location(int x, int y) {
     }
 
-    record Vector(int x, int y) {
+    private record Vector(int x, int y) {
     }
 }

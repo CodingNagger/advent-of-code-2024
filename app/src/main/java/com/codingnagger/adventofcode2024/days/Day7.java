@@ -22,7 +22,7 @@ public class Day7 implements Day {
                 .sum() + "";
     }
 
-    record Equation(long test, List<Long> components, boolean isPartTwo) {
+    private record Equation(long test, List<Long> components, boolean isPartTwo) {
         public static Equation parse(String line) {
             String[] parts = line.split(": ");
             var test = Long.parseLong(parts[0]);
@@ -70,6 +70,6 @@ public class Day7 implements Day {
         }
     }
 
-    record SpitEquationComponents(long accumulated, List<Long> remainer) {
+    private record SpitEquationComponents(long accumulated, List<Long> remainer) {
     }
 }

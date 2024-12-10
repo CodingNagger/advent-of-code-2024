@@ -26,7 +26,7 @@ public class Day6 implements Day {
         int y();
     }
 
-    record Guard(Direction direction, int x, int y) implements Location {
+    private record Guard(Direction direction, int x, int y) implements Location {
         public Guard next() {
             return switch (direction) {
                 case UP -> new Guard(direction, x, y - 1);
@@ -50,10 +50,10 @@ public class Day6 implements Day {
         }
     }
 
-    record Point(int x, int y) implements Location {
+    private record Point(int x, int y) implements Location {
     }
 
-    record MappedArea(Guard guard, int yBound, int xBound, Set<Location> obstacles) {
+    private record MappedArea(Guard guard, int yBound, int xBound, Set<Location> obstacles) {
         public MappedArea(char[][] tiles) {
             this(findGuard(tiles), tiles.length, tiles[0].length, findObstacles(tiles));
         }

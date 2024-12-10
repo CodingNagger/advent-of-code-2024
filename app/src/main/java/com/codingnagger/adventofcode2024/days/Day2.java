@@ -19,7 +19,7 @@ public class Day2 implements Day {
                 .count() + "";
     }
 
-    record Report(long[] levels) {
+    private record Report(long[] levels) {
         static Report parse(String line) {
             return new Report(Arrays.stream(line.split(" ")).mapToLong(Long::parseLong).toArray());
         }

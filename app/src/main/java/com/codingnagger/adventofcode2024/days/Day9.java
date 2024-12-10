@@ -154,7 +154,7 @@ public class Day9 implements Day {
         return resultingBlocks;
     }
 
-    record DiskSection(Long[] ids) {
+    private record DiskSection(Long[] ids) {
         public static DiskSection fromFileBlock(int id, int size) {
             return new DiskSection(LongStream.range(0, size).mapToObj(_ -> (long) id).toArray(Long[]::new));
         }
