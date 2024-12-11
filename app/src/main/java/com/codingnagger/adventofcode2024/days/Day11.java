@@ -1,77 +1,55 @@
 package com.codingnagger.adventofcode2024.days;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 public class Day11 implements Day {
-    private static final Pattern NUMBER_PATTERN = Pattern.compile("[0-9]+");
+    private static final Map<String, Long> CACHE = new HashMap<>();
 
     @Override
     public String partOne(List<String> input) {
-        return StoneSet.parse(input).blink(25).countStones() + "";
+        return Arrays.stream(input.getFirst().split(" ")).mapToLong(line -> countStonesAfterBlinking(25, line)).sum() + "";
     }
 
     @Override
     public String partTwo(List<String> input) {
-        return StoneSet.parse(input).blink(75).countStones() + "";
+        return Arrays.stream(input.getFirst().split(" ")).mapToLong(line -> countStonesAfterBlinking(75, line)).sum() + "";
     }
 
-    record StoneSet(String stones) {
-        static StoneSet parse(List<String> input) {
-            return new StoneSet(input.getFirst());
+    private long countStonesAfterBlinking(int times, String stones) {
+        var cacheKey = stones + "_" + times;
+        if (CACHE.containsKey(cacheKey)) {
+            return CACHE.get(cacheKey);
         }
 
-        StoneSet blink(int times) {
-            var result = this;
+        long result;
 
-            for (var n = 0; n < times; n++) {
-                result = result.blink();
-                print(result);
-            }
-
-            return result;
+        if (times == 0) {
+            result = 1;
+        } else if (stones.equals("0")) {
+            result = countStonesAfterBlinking(times - 1, "1");
+        } else if (stones.length() % 2 == 0) {
+            var splitStones = splitStone(stones);
+            result = countStonesAfterBlinking(times - 1, splitStones.getFirst()) +
+                    countStonesAfterBlinking(times - 1, splitStones.getLast());
+        } else {
+            result = countStonesAfterBlinking(times - 1, times2024(stones));
         }
 
-        private void print(StoneSet stones) {
-            System.out.println(stones.stones);
-        }
+        CACHE.put(cacheKey, result);
+        return result;
+    }
 
-        StoneSet blink() {
-            var matcher = NUMBER_PATTERN.matcher(stones);
-            var builder = new StringBuilder();
+    private List<String> splitStone(String number) {
+        var firstPart = number.substring(0, (number.length() / 2));
+        var secondPart = String.valueOf(Long.parseLong(number.substring(number.length() / 2)));
 
-            while (matcher.find()) {
-                transform(matcher.group()).forEach(f -> builder.append(f).append(' '));
-            }
+        return List.of(firstPart, secondPart);
+    }
 
-            return new StoneSet(builder.toString().trim());
-        }
-
-        private List<String> transform(String number) {
-            if ("0".equals(number)) {
-                return List.of("1");
-            }
-
-            if (number.length() % 2 == 0) {
-                return splitStone(number);
-            }
-
-            return times2024(number);
-        }
-
-        private List<String> splitStone(String number) {
-            var firstPart = number.substring(0, (number.length() / 2));
-            var secondPart = String.valueOf(Long.parseLong(number.substring(number.length() / 2)));
-
-            return List.of(firstPart, secondPart);
-        }
-
-        private List<String> times2024(String number) {
-            return List.of(String.valueOf(Long.parseLong(number) * 2024));
-        }
-
-        public long countStones() {
-            return stones.chars().filter(c -> c == ' ').count() + 1;
-        }
+    private String times2024(String number) {
+        return String.valueOf(Long.parseLong(number) * 2024);
     }
 }
