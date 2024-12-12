@@ -19,18 +19,25 @@ public class Day12 implements Day {
         }
     }
 
+    private static final Map<Character, String> charMap = new HashMap<>();
+
     private String colorise(String line) {
         var colored = line;
         var reset = "\033[0m";
+        var random = new Random();
 
         for (char c = 'A'; c <= 'Z'; c++) {
-            // Generate a unique color for each letter using a simple formula
-            int index = c - 'A';
-            int r = (index * 10) % 256;
-            int g = (index * 15) % 256;
-            int b = (index * 20) % 256;
+            if (!charMap.containsKey(c)) {
+                int r = random.nextInt(200);
+                int g = random.nextInt(200);
+                int b = random.nextInt(200);
+                charMap.put(c, rgbColor(r, g, b));
+            }
 
-            colored = colored.replaceAll(Character.toString(c), rgbColor(r, g, b) + c + reset);
+            // Generate a unique color for each letter using a simple formula
+
+
+            colored = colored.replaceAll(Character.toString(c), charMap.get(c) + c + reset);
         }
 
         return colored;
@@ -48,35 +55,48 @@ public class Day12 implements Day {
     private record Garden(Set<Region> regions) {
         public static Garden parse(List<String> input) {
             var map = input.stream().map(String::toCharArray).toArray(char[][]::new);
-            var regions = new HashSet<Region>();
+            Region region = null;
             var visited = new HashSet<Location>();
+            var regions = new HashSet<Region>();
 
-            Queue<Location> queue = new LinkedList<>();
-            queue.add(new Location(0, 0));
+            for (var y = 0; y < map.length; y++) {
+                for (var x = 0; x < map[y].length; x++) {
 
-            while (!queue.isEmpty()) {
-                var current = queue.poll();
+                    Queue<Location> queue = new LinkedList<>();
+                    queue.add(new Location(x, y));
 
-                if (visited.contains(current)) {
-                    continue;
+                    while (!queue.isEmpty()) {
+                        var current = queue.poll();
+
+                        if (visited.contains(current)) {
+                            continue;
+                        }
+
+                        visited.add(current);
+
+                        if (region == null) {
+                            region = Region.from(map, current);
+                        } else {
+                            region = region.with(current);
+                        }
+
+                        var gardenNeighbours = current.neighbours()
+                                .stream()
+                                .filter(l -> l.y >= 0 && l.y < map.length && l.x >= 0 && l.x < map[l.y].length)
+                                .filter(l -> map[l.y][l.x] == map[current.y][current.x])
+                                .toList();
+
+                        queue.addAll(gardenNeighbours);
+                    }
+
+                    if (region != null) {
+                        regions.add(region);
+                        region = null;
+                    }
                 }
-
-                visited.add(current);
-
-                var potentialRegion = regions.stream().filter(r -> r.shouldContain(map, current)).findFirst();
-
-                if (potentialRegion.isPresent()) {
-                    var confirmedRegion = potentialRegion.get();
-                    regions.remove(confirmedRegion);
-                    regions.add(confirmedRegion.with(current));
-                } else {
-                    regions.add(Region.from(map, current));
-                }
-
-                queue.addAll(current.neighbours(map));
             }
 
-            return new Garden(merge(regions));
+            return new Garden(regions);
         }
 
         private static Set<Region> merge(HashSet<Region> regions) {

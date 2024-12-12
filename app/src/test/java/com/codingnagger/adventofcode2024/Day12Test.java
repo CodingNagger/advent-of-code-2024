@@ -23,7 +23,10 @@ class Day12Test {
     }
 
     @ParameterizedTest
-    @CsvSource({"day12_simplest,12", "day12_simple,140", "day12_simpleRegionWithInnerRegion,132", "day12_simpleRegionWithoutInnerRegion,108", "day12_oneRegionContainingFiveRegions,772"})
+    @CsvSource({
+            "day12_simplest,12", "day12_simple,140", "day12_simpleRegionWithInnerRegion,132",
+            "day12_simpleRegionWithoutInnerRegion,108", "day12_oneRegionContainingFiveRegions,772",
+            "day12_weird, 426452"})
     void partOne_smallTests(String filename, String expected) {
         String result = DAY.partOne(InputLoader.LoadTest(filename + ".txt"));
 
