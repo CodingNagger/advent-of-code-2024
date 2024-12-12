@@ -18,9 +18,9 @@ public class Day6 implements Day {
                 .potentialObstaclesCount() + "";
     }
 
-    enum Direction {UP, DOWN, LEFT, RIGHT}
+    private enum Direction {UP, DOWN, LEFT, RIGHT}
 
-    interface Location {
+    private interface Location {
         int x();
 
         int y();
