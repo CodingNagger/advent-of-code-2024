@@ -5,12 +5,13 @@ import java.util.*;
 public class Day12 implements Day {
     @Override
     public String partOne(List<String> input) {
-        // 1140080 answer too low
-        // the more distinct regions the more fences
-        // square of 4 disctinct single-area regions -> totalPrice = (4 + 4 + 4 + 4) = 16
-        // square of 1 disctinct 4-area region -> totalPrice = = 8
         prettyMapPrint(input);
         return Garden.parse(input).totalPrice() + "";
+    }
+
+    @Override
+    public String partTwo(List<String> input) {
+        return Garden.parse(input).bulkDiscountPrice() + "";
     }
 
     private void prettyMapPrint(List<String> input) {
@@ -45,11 +46,6 @@ public class Day12 implements Day {
 
     String rgbColor(int r, int g, int b) {
         return "\033[38;2;" + r + ";" + g + ";" + b + "m";
-    }
-
-    @Override
-    public String partTwo(List<String> input) {
-        return "";
     }
 
     private record Garden(Set<Region> regions) {
@@ -99,37 +95,16 @@ public class Day12 implements Day {
             return new Garden(regions);
         }
 
-        private static Set<Region> merge(HashSet<Region> regions) {
-            var mergedRegions = new HashSet<Region>();
-
-            for (var region : regions) {
-                var mergeCandidate = mergedRegions.stream().filter(region::couldFuseWith).findFirst();
-
-                if (mergeCandidate.isPresent()) {
-                    var regionToMerge = mergeCandidate.get();
-                    mergedRegions.remove(regionToMerge);
-                    mergedRegions.add(regionToMerge.merge(region));
-                } else {
-                    mergedRegions.add(region);
-                }
-            }
-
-            return mergedRegions;
-        }
-
         public long totalPrice() {
             return regions.stream().mapToLong(Region::price).sum();
+        }
+
+        public long bulkDiscountPrice() {
+            return regions.stream().mapToLong(Region::bulkDiscountPrice).sum();
         }
     }
 
     private record Location(int x, int y) {
-        public Collection<Location> neighbours(char[][] map) {
-            return neighbours()
-                    .stream()
-                    .filter(l -> l.y >= 0 && l.y < map.length && l.x >= 0 && l.x < map[y].length)
-                    .toList();
-        }
-
         public Collection<Location> neighbours() {
             int[][] directions = {{0, -1}, {0, 1}, {1, -0}, {-1, 0}};
 
@@ -137,18 +112,41 @@ public class Day12 implements Day {
                     .map(d -> new Location(x + d[0], y + d[1]))
                     .toList();
         }
+
+        public Location top() {
+            return new Location(x, y - 1);
+        }
+
+        public Location left() {
+            return new Location(x - 1, y);
+        }
+
+        public Location right() {
+            return new Location(x + 1, y);
+        }
+
+        public Location bottom() {
+            return new Location(x, y + 1);
+        }
+
+        public Location topLeft() {
+            return new Location(x - 1, y - 1);
+        }
+
+        public Location topRight() {
+            return new Location(x + 1, y - 1);
+        }
+
+        public Location bottomRight() {
+            return new Location(x + 1, y + 1);
+        }
+
+        public Location bottomLeft() {
+            return new Location(x - 1, y + 1);
+        }
     }
 
     private record Region(char plantLabel, Set<Location> areas) {
-        private boolean shouldContain(char[][] map, Location location) {
-            var candidatePlantLabel = map[location.y][location.x];
-            if (candidatePlantLabel != plantLabel) {
-                return false;
-            }
-
-            return location.neighbours(map).stream().anyMatch(areas::contains);
-        }
-
         private static Region from(char[][] map, Location location) {
             return new Region(map[location.y][location.x], Set.of(location));
         }
@@ -160,7 +158,6 @@ public class Day12 implements Day {
         }
 
         public long price() {
-            System.out.println("Region with " + plantLabel + " plant has a price of " + areas.size() + " * " + perimeter() + " = " + (areas.size() * perimeter()));
             return areas.size() * perimeter();
         }
 
@@ -170,21 +167,64 @@ public class Day12 implements Day {
                     .sum();
         }
 
-        public Region merge(Region region) {
-            assert plantLabel == region.plantLabel;
-            var mergedAreas = new HashSet<Location>();
-            mergedAreas.addAll(areas);
-            mergedAreas.addAll(region.areas);
-            return new Region(plantLabel, mergedAreas);
+        public long bulkDiscountPrice() {
+            System.out.println("Region with " + plantLabel + " plant has a price of " + areas.size() + " * " + sideCount() + " = " + (areas.size() * sideCount()));
+            return areas.size() * sideCount();
         }
 
-        public boolean couldFuseWith(Region region) {
-            return plantLabel == region.plantLabel &&
-                    region.touches(this);
+        private long sideCount() {
+            var result = 0L;
+
+            result += topLeftOuterTurnCount();
+            result += topRightOuterTurnCount();
+            result += bottomRightOuterTurnCount();
+            result += bottomLeftOuterTurnCount();
+
+            result += topLeftInnerTurnCount();
+            result += topRightInnerTurnCount();
+            result += bottomRightInnerTurnCount();
+            result += bottomLeftInnerTurnCount();
+
+            return result;
         }
 
-        private boolean touches(Region region) {
-            return areas.stream().flatMap(r -> r.neighbours().stream()).anyMatch(region.areas::contains);
+        private long bottomLeftInnerTurnCount() {
+            return areas.stream().filter(a -> areas().contains(a.bottom()) && areas.contains(a.left()) && !areas.contains(a.bottomLeft())).count();
+        }
+
+        private long bottomRightInnerTurnCount() {
+            return areas.stream().filter(a -> areas().contains(a.bottom()) && areas.contains(a.right()) && !areas.contains(a.bottomRight())).count();
+        }
+
+        private long topRightInnerTurnCount() {
+            return areas.stream().filter(a -> areas().contains(a.top()) && areas.contains(a.right()) && !areas.contains(a.topRight())).count();
+        }
+
+        private long topLeftInnerTurnCount() {
+            return areas.stream().filter(a -> areas().contains(a.top()) && areas.contains(a.left()) && !areas.contains(a.topLeft())).count();
+        }
+
+        // count border corners
+        // #o
+        // ## - count diagonal neighbors outside region
+        //     ooo
+        // ####n#o - topright, topleft, bottomright, bottoleft
+        //   ##nno
+
+        private long bottomLeftOuterTurnCount() {
+            return areas.stream().filter(a -> !areas().contains(a.bottom()) && !areas.contains(a.left())).count();
+        }
+
+        private long bottomRightOuterTurnCount() {
+            return areas.stream().filter(a -> !areas().contains(a.bottom()) && !areas.contains(a.right())).count();
+        }
+
+        private long topRightOuterTurnCount() {
+            return areas.stream().filter(a -> !areas().contains(a.top()) && !areas.contains(a.right())).count();
+        }
+
+        private long topLeftOuterTurnCount() {
+            return areas.stream().filter(a -> !areas().contains(a.top()) && !areas.contains(a.left())).count();
         }
     }
 }
