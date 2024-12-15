@@ -35,6 +35,15 @@ class Day15Test {
     void partTwo() {
         String result = DAY.partTwo(INPUT);
 
-        assertThat(result).isEqualTo("");
+        assertThat(result).isEqualTo("9021");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "day15_partTwoSmallTest,618"})
+    void partTwo_smallTests(String filename, String expected) {
+        String result = DAY.partTwo(InputLoader.LoadTest(filename + ".txt"));
+
+        assertThat(result).isEqualTo(expected);
     }
 }
