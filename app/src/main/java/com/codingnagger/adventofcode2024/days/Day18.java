@@ -19,21 +19,43 @@ public class Day18 implements Day {
 
     @Override
     public String partOne(List<String> input) {
-        var tickedLocations = IntStream.range(0, fallenBytesToSimulate)
-                .mapToObj(tick -> new TimedLocation(tick, Location.parse(input.get(tick))))
-                .toList();
-        var corruptedLocations = tickedLocations.stream().map(TimedLocation::location).collect(Collectors.toSet());
-
-        return "" + shortedDistance(new Location(0, 0), new Location(maxXY, maxXY), corruptedLocations);
+        return shortestDistanceForSimulatedBytes(fallenBytesToSimulate, input).orElseThrow().toString();
     }
 
     @Override
     public String partTwo(List<String> input) {
-        return "";
+        var left = fallenBytesToSimulate;
+        var right = input.size() - 1;
+
+        do {
+            int mid = left + (right - left) / 2;
+
+            var shortestDistance = shortestDistanceForSimulatedBytes(mid, input);
+
+            if (shortestDistance.isEmpty()) {
+                if (shortestDistanceForSimulatedBytes(mid - 1, input).isPresent()) {
+                    return input.get(mid - 1);
+                }
+
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        } while (left <= right);
+
+        throw new IllegalStateException("Should never get here");
     }
 
+    private Optional<Integer> shortestDistanceForSimulatedBytes(int fallenBytes, List<String> input) {
+        var tickedLocations = IntStream.range(0, fallenBytes)
+                .mapToObj(tick -> new TimedLocation(tick, Location.parse(input.get(tick))))
+                .toList();
+        var corruptedLocations = tickedLocations.stream().map(TimedLocation::location).collect(Collectors.toSet());
 
-    private int shortedDistance(Location start, Location destination, Set<Location> corruptedLocations) {
+        return shortedDistance(new Location(0, 0), new Location(maxXY, maxXY), corruptedLocations);
+    }
+
+    private Optional<Integer> shortedDistance(Location start, Location destination, Set<Location> corruptedLocations) {
         var lowestDistanceTo = new HashMap<Location, Integer>();
 
         Queue<LocationWithSteps> queue = new LinkedList<>();
@@ -54,7 +76,7 @@ public class Day18 implements Day {
             queue.addAll(neighbours(current, corruptedLocations));
         }
 
-        return lowestDistanceTo.get(destination);
+        return Optional.ofNullable(lowestDistanceTo.getOrDefault(destination, null));
     }
 
     private Collection<LocationWithSteps> neighbours(LocationWithSteps location, Set<Location> corrupted) {
