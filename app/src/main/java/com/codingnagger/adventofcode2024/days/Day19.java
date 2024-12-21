@@ -3,7 +3,7 @@ package com.codingnagger.adventofcode2024.days;
 import java.util.*;
 
 public class Day19 implements Day {
-    private static final Map<String, Integer> CACHE = new HashMap<>();
+    private static final Map<String, Long> CACHE = new HashMap<>();
 
     @Override
     public String partOne(List<String> input) {
@@ -22,10 +22,10 @@ public class Day19 implements Day {
         var towels = Arrays.stream(input.getFirst().split(",")).map(String::trim).sorted(Comparator.comparing(String::length).reversed()).toList();
         var designs = input.subList(2, input.size());
 
-        return designs.stream().mapToInt(d -> reproduceCount(d, towels)).sum() + "";
+        return designs.stream().mapToLong(d -> reproduceCount(d, towels)).sum() + "";
     }
 
-    private int reproduceCount(String desiredDesign, List<String> orderedTowels) {
+    private long reproduceCount(String desiredDesign, List<String> orderedTowels) {
         if (CACHE.containsKey(desiredDesign)) {
             return CACHE.get(desiredDesign);
         }
@@ -36,7 +36,7 @@ public class Day19 implements Day {
 
         var result = orderedTowels.stream()
                 .filter(desiredDesign::startsWith)
-                .mapToInt(towel -> reproduceCount(desiredDesign.substring(towel.length()), orderedTowels))
+                .mapToLong(towel -> reproduceCount(desiredDesign.substring(towel.length()), orderedTowels))
                 .sum();
 
         CACHE.put(desiredDesign, result);
