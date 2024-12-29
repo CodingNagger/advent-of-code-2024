@@ -1,18 +1,17 @@
 package com.codingnagger.adventofcode2024.days;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Day16 implements Day {
     @Override
     public String partOne(List<String> input) {
-
-
         return ReindeerMaze.parse(input).lowestScore() + "";
     }
 
     @Override
     public String partTwo(List<String> input) {
-        return "";
+        return ReindeerMaze.parse(input).bestPathTileCount() + "";
     }
 
     private record ReindeerMaze(Location start, Location end, char[][] map) {
@@ -43,8 +42,10 @@ public class Day16 implements Day {
         public long lowestScore() {
             var lowestScoreAtLocation = new HashMap<DirectedLocation, Long>();
 
+            var visited = new HashSet<ScoredLocation>();
+
             Queue<ScoredLocation> queue = new LinkedList<>();
-            queue.add(new ScoredLocation(new DirectedLocation(Direction.EAST, start), 0L));
+            queue.add(new ScoredLocation(new DirectedLocation(Direction.EAST, start), 0L, List.of()));
 
             while (!queue.isEmpty()) {
                 var current = queue.poll();
@@ -56,15 +57,91 @@ public class Day16 implements Day {
 
                 lowestScoreAtLocation.put(current.directedLocation, current.score);
 
+                visited.add(current);
+
                 queue.addAll(next(current));
             }
 
-            return lowestScoreAtLocation.entrySet().stream()
+            var lowestScore = lowestScoreAtLocation.entrySet().stream()
                     .filter(e -> e.getKey().location.equals(end))
                     .mapToLong(Map.Entry::getValue)
                     .min()
                     .orElseThrow();
+
+            var arrived = visited.stream()
+                    .filter(v -> v.directedLocation.location.equals(end))
+                    .filter(v -> v.score == lowestScore)
+                    .toList();
+
+            var visitedLocations = arrived
+                    .stream()
+                    .map(ScoredLocation::historyPlusSelf)
+                    .flatMap(List::stream)
+                    .collect(Collectors.toSet());
+
+//            print(visitedLocations);
+
+            return lowestScore;
         }
+
+        public long bestPathTileCount() {
+            var lowestScoreAtLocation = new HashMap<DirectedLocation, Long>();
+
+            var visited = new HashSet<ScoredLocation>();
+
+            Queue<ScoredLocation> queue = new LinkedList<>();
+            queue.add(new ScoredLocation(new DirectedLocation(Direction.EAST, start), 0L, List.of()));
+
+            while (!queue.isEmpty()) {
+                var current = queue.poll();
+
+                if (lowestScoreAtLocation.containsKey(current.directedLocation) &&
+                        lowestScoreAtLocation.get(current.directedLocation) < current.score) {
+                    continue;
+                }
+
+                lowestScoreAtLocation.put(current.directedLocation, current.score);
+
+                visited.add(current);
+
+                queue.addAll(next(current));
+            }
+
+            var lowestScore = lowestScoreAtLocation.entrySet().stream()
+                    .filter(e -> e.getKey().location.equals(end))
+                    .mapToLong(Map.Entry::getValue)
+                    .min()
+                    .orElseThrow();
+
+            var arrived = visited.stream()
+                    .filter(v -> v.directedLocation.location.equals(end))
+                    .filter(v -> v.score == lowestScore)
+                    .toList();
+
+            var visitedLocations = arrived
+                    .stream()
+                    .map(ScoredLocation::historyPlusSelf)
+                    .flatMap(List::stream)
+                    .collect(Collectors.toSet());
+
+//            print(visitedLocations);
+
+            return visitedLocations.size();
+        }
+
+//        private void print(Set<Location> visitedLocations) {
+//            for (var y = 0; y < map.length; y++) {
+//                for (var x = 0; x < map[y].length; x++) {
+//                    if (visitedLocations.contains(map[y][x])) {
+//                        System.out.print("O");
+//                    } else {
+//                        System.out.print(map[y][x]);
+//                    }
+//                }
+//
+//                System.out.println();
+//            }
+//        }
 
         private Collection<ScoredLocation> next(ScoredLocation location) {
             var neighbours = switch (location.direction()) {
@@ -90,36 +167,42 @@ public class Day16 implements Day {
         }
     }
 
-    private record ScoredLocation(DirectedLocation directedLocation, Long score) {
+    private record ScoredLocation(DirectedLocation directedLocation, Long score, List<Location> history) {
         public Collection<ScoredLocation> neighboursFacingNorth() {
             return List.of(
-                    new ScoredLocation(new DirectedLocation(directedLocation.direction, new Location(directedLocation.x(), directedLocation.y() - 1)), score + 1),
-                    new ScoredLocation(new DirectedLocation(Direction.EAST, directedLocation.location), score + 1000),
-                    new ScoredLocation(new DirectedLocation(Direction.WEST, directedLocation.location), score + 1000)
+                    new ScoredLocation(new DirectedLocation(directedLocation.direction, new Location(directedLocation.x(), directedLocation.y() - 1)), score + 1, historyPlusSelf()),
+                    new ScoredLocation(new DirectedLocation(Direction.EAST, directedLocation.location), score + 1000, historyPlusSelf()),
+                    new ScoredLocation(new DirectedLocation(Direction.WEST, directedLocation.location), score + 1000, historyPlusSelf())
             );
+        }
+
+        private List<Location> historyPlusSelf() {
+            var newHistory = new ArrayList<Location>(history);
+            newHistory.add(directedLocation.location);
+            return newHistory;
         }
 
         public Collection<ScoredLocation> neighboursFacingSouth() {
             return List.of(
-                    new ScoredLocation(new DirectedLocation(directedLocation.direction, new Location(directedLocation.x(), directedLocation.y() + 1)), score + 1),
-                    new ScoredLocation(new DirectedLocation(Direction.EAST, directedLocation.location), score + 1000),
-                    new ScoredLocation(new DirectedLocation(Direction.WEST, directedLocation.location), score + 1000)
+                    new ScoredLocation(new DirectedLocation(directedLocation.direction, new Location(directedLocation.x(), directedLocation.y() + 1)), score + 1, historyPlusSelf()),
+                    new ScoredLocation(new DirectedLocation(Direction.EAST, directedLocation.location), score + 1000, historyPlusSelf()),
+                    new ScoredLocation(new DirectedLocation(Direction.WEST, directedLocation.location), score + 1000, historyPlusSelf())
             );
         }
 
         public Collection<ScoredLocation> neighboursFacingEast() {
             return List.of(
-                    new ScoredLocation(new DirectedLocation(directedLocation.direction, new Location(directedLocation.x() + 1, directedLocation.y())), score + 1),
-                    new ScoredLocation(new DirectedLocation(Direction.NORTH, directedLocation.location), score + 1000),
-                    new ScoredLocation(new DirectedLocation(Direction.SOUTH, directedLocation.location), score + 1000)
+                    new ScoredLocation(new DirectedLocation(directedLocation.direction, new Location(directedLocation.x() + 1, directedLocation.y())), score + 1, historyPlusSelf()),
+                    new ScoredLocation(new DirectedLocation(Direction.NORTH, directedLocation.location), score + 1000, historyPlusSelf()),
+                    new ScoredLocation(new DirectedLocation(Direction.SOUTH, directedLocation.location), score + 1000, historyPlusSelf())
             );
         }
 
         public Collection<ScoredLocation> neighboursFacingWest() {
             return List.of(
-                    new ScoredLocation(new DirectedLocation(directedLocation.direction, new Location(directedLocation.x() - 1, directedLocation.y())), score + 1),
-                    new ScoredLocation(new DirectedLocation(Direction.NORTH, directedLocation.location), score + 1000),
-                    new ScoredLocation(new DirectedLocation(Direction.SOUTH, directedLocation.location), score + 1000)
+                    new ScoredLocation(new DirectedLocation(directedLocation.direction, new Location(directedLocation.x() - 1, directedLocation.y())), score + 1, historyPlusSelf()),
+                    new ScoredLocation(new DirectedLocation(Direction.NORTH, directedLocation.location), score + 1000, historyPlusSelf()),
+                    new ScoredLocation(new DirectedLocation(Direction.SOUTH, directedLocation.location), score + 1000, historyPlusSelf())
             );
         }
 

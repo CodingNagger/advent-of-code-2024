@@ -42,7 +42,7 @@ class Day16Test {
     @CsvSource({
             "day16_smallExample,45"})
     void partTwo_smallTests(String filename, String expected) {
-        String result = DAY.partOne(InputLoader.LoadTest(filename + ".txt"));
+        String result = DAY.partTwo(InputLoader.LoadTest(filename + ".txt"));
 
         assertThat(result).isEqualTo(expected);
     }
