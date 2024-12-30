@@ -25,6 +25,6 @@ class Day23Test {
     void partTwo() {
         String result = DAY.partTwo(INPUT);
 
-        assertThat(result).isEqualTo("");
+        assertThat(result).isEqualTo("co,de,ka,ta");
     }
 }
